@@ -1,0 +1,26 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "▶️ K6: Run with Prometheus",
+            "type": "shell",
+            "command": "k6",
+            "args": [
+                "run",
+                "--out",
+                "experimental-prometheus-rw=http://localhost:9090/api/v1/write",
+                "${file}"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": true
+            },
+            "problemMatcher": []
+        }
+    ]
+}
