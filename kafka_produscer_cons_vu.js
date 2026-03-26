@@ -1,11 +1,11 @@
 import { check } from 'k6';
 import { Writer, SchemaRegistry, SCHEMA_TYPE_JSON } from 'k6/x/kafka';
 import { sleep } from 'k6';
+import exec from 'k6/execution';
 
 const brokers = ['localhost:9092'];
 const topic = 'VTB_topic_1';
 const PACING_CYCLE = 1;
-let counter = 0;
 
 const writer = new Writer({
     brokers: brokers,
@@ -17,23 +17,25 @@ const schemaRegistry = new SchemaRegistry();
 
 export const options = {
     discardResponseBodies: false,
-    scenarios: {
-        // Полный цикл с плавным ростом VU
-        scenario: {
-            executor: 'ramping-vus',
-            startVUs: 0,
-            stages: [
-                { duration: '5s', target: 5 },
-                { duration: '5m', target: 5 },   // 5 RPS в течение 5 минут
-                { duration: '5s', target: 10 },
-                { duration: '5m', target: 10 },  // 10 RPS в течение 5 минут
-            ],
+      scenarios: {
+        contacts: {
+        executor: 'constant-vus',
+        vus: 5,
+        duration: '10m',
+        },
+        contacts1: {
+        executor: 'constant-vus',
+        vus: 5,
+        duration: '5m',
+        startTime: '5m',
         },
     }
-};    
+};
+   
 export default function () {
     const start = Date.now();
-    const partition = counter++ % 2;
+    const partition = exec.scenario.iterationInTest % 2;
+    //const partition = (__VU + __ITER) % 2;
 
     const message = {
         partition: partition,
@@ -45,10 +47,10 @@ export default function () {
         }),
     };
 
-    const error = writer.produce({ messages: [message] });
+    const answer = writer.produce({ messages: [message] });
     
-    check(error, {
-        'message sent': (err) => err === undefined,
+    check(answer, {
+        'message sent': (ans) => ans === undefined,
     });
 
     const elapsed = (Date.now() - start) / 1000;
