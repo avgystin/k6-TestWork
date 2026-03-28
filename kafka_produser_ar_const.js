@@ -2,12 +2,9 @@ import { check } from 'k6';
 import { Writer, SchemaRegistry, SCHEMA_TYPE_JSON } from 'k6/x/kafka';
 import exec from 'k6/execution';
 
-const brokers = ['localhost:9092'];
-const topic = 'VTB_topic_1';
-
 const writer = new Writer({
-    brokers: brokers,
-    topic: topic,
+    brokers: ['localhost:9092'],
+    topic: 'VTB_topic_1',
     acks: 1,
 });
 
@@ -16,18 +13,24 @@ const schemaRegistry = new SchemaRegistry();
 export const options = {
     discardResponseBodies: false,
     scenarios: {
-        scenario: {
-            executor: 'ramping-arrival-rate',
-            startRate: 5,                      
+        scenario0: {
+            executor: 'constant-arrival-rate',
+            duration: '10m',
+            rate: 5,                      
             timeUnit: '1s',                    
             preAllocatedVUs: 10,               
-            maxVUs: 20,                       
-            stages: [
-                { duration: '5m', target: 5 },   // 5 минут держим 5 RPS
-                { duration: '0s', target: 10 },
-                { duration: '5m', target: 10 },  // Следующие 5 минут 10 RPS
-            ],
+            maxVUs: 10,                       
         },
+        scenario1: {
+            executor: 'constant-arrival-rate',
+            duration: '5m',
+            rate: 5,                      
+            timeUnit: '1s',                    
+            preAllocatedVUs: 10,               
+            maxVUs: 10,
+            startTime: '5m',                      
+        },
+
     }
 };    
 
